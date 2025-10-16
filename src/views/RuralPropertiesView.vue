@@ -235,8 +235,6 @@ const openUpdateRegisterModal = (data) => {
         }
     })
 
-    console.log(producer_id);
-
     dataToCreate.value = {
         rural_property: {
             id: data.id,
