@@ -1,7 +1,7 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import { Button } from 'primevue';
+import { RouterView } from 'vue-router'
 import navbar from './components/Navbar.vue';
+import 'primeicons/primeicons.css'
 </script>
 
 <template>
