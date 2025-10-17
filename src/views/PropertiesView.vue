@@ -116,7 +116,6 @@ const getProducers = async (pagination) => {
 
 
 const openUpdateRegisterModal = (data) => {
-    const formattedDate = data.register_date.substring(6, 10) + '-' + data.register_date.substring(3, 5) + '-' + data.register_date.substring(0, 2);
 
     dataToCreate.value = {
         producer: {
@@ -125,7 +124,7 @@ const openUpdateRegisterModal = (data) => {
             document: data.document,
             phone: data.phone,
             email: data.email,
-            register_date: new Date(formattedDate).toLocaleDateString('pt-BR'),
+            register_date: data.register_date,
         },
         address: {
             address: data.address,
@@ -324,7 +323,7 @@ const validateForm = () => {
 
         <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
             <label for="register_date" class="font-semibold w-24">Data de Registro</label>
-            <DatePicker fluid v-model="dataToCreate.producer.register_date" class="w-162" placeholder="Informe a data" id="register_date"/>
+            <DatePicker dateFormat="dd/mm/yy" fluid v-model="dataToCreate.producer.register_date" class="w-162" placeholder="Informe a data" id="register_date"/>
         </div>
 
         <Message v-if="formErrors.register_date" severity="error">{{ formErrors.register_date }}</Message>

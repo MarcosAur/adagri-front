@@ -212,8 +212,6 @@ const openUpdateRegisterModal = (data) => {
         }
     })
 
-    console.log(rural_property_id);
-
     dataToCreate.value = {
         id: data.id,
         name: data.name,
@@ -323,7 +321,7 @@ const validateForm = () => {
         <Message v-if="formErrors.longitude" severity="error">{{ formErrors.longitude }}</Message>
 
         <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="rural_property_id" class="font-semibold w-24">Produtor</label>
+            <label for="rural_property_id" class="font-semibold w-24">Propriedade Rural</label>
             <Select :options="ruralPropertiesSelectData" optionLabel="name" name="code" placeholder="Selecione a propriedade" v-model="dataToCreate.rural_property_id" id="rural_property_id" class="flex-auto"  autocomplete="off" />
         </div>
 
