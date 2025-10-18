@@ -16,10 +16,16 @@ Este projeto é uma aplicação frontend construída com **Vue 3** e **Vite**, s
 
 ---
 
-## Execução
+## Instruções de Instalação
 - Executar o comando para que os containers sejam carregados
 ```bash
 docker compose up -d
 ```
 - Acessar via terminar com a URL: [Aplicação Front](http://localhost:8001)
 
+- É importante que os containers da API estejam funcionando e rodando na porta 8000 do localhost. Caso seja necessário alterar a porta do container nginx da API altere a constante **apiBaseUrl** no arquivo **settings.js**.
+
+## Credenciais de acesso
+
+- email: teste@teste.com
+- senha: 12345678
