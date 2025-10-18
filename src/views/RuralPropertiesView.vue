@@ -6,11 +6,14 @@ import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import loginService from '@/services/LoginService';
 import { Button, InputText, Message, Dialog, InputNumber, Select } from 'primevue';
+import { useAuthStore } from '@/stores/login';
 
 
 onMounted(async () => {
+    isLoading.value  = true;
     await getRuralProperties();
     await getAllProducersToSelect();
+    isLoading.value  = false;
 });
 const columns = [
     { field: 'name', header: 'Nome' },
@@ -23,6 +26,9 @@ const columns = [
     { field: 'state', header: 'Estado' },
 ];
 
+
+const isLoading = ref(false);
+const authStore = useAuthStore()
 const registerToDeleteId = ref(null);
 const serverReturn = ref(false);
 const serverReturnMessage = ref('');
@@ -75,10 +81,9 @@ const clearErrors = () => {
 const getAllProducersToSelect = async () => {
 
     try{
-        const token = await loginService.getToken();
         const response = await axios.get(`${apiBaseUrl}/api/producer`, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         });
 
@@ -99,7 +104,6 @@ const getRuralProperties = async (pagination) => {
     try{
         const url = pagination ? `${apiBaseUrl}/api/rural-property?page=${pagination.page + 1}` : `${apiBaseUrl}/api/rural-property`;
         ruralProperties.value = [];
-        const token = await loginService.getToken();
         const response = await axios.get(url, {
             params: {
                 filters: {
@@ -107,7 +111,7 @@ const getRuralProperties = async (pagination) => {
                 }
             },
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         });
         
@@ -136,8 +140,8 @@ const getRuralProperties = async (pagination) => {
 }
 
 const submitCreationForm = async () => {
+    isLoading.value  = true;
     serverReturn.value = false;
-    const token = await loginService.getToken();
     const validated = validateForm();
     if(!validated){
         return;
@@ -148,7 +152,7 @@ const submitCreationForm = async () => {
     if(dataToCreate.value.rural_property.id){
         await axios.put(`${apiBaseUrl}/api/rural-property/${dataToCreate.value.rural_property.id}`, dataToCreate.value, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         }).then(() => {
             serverReturn.value = true;
@@ -162,7 +166,7 @@ const submitCreationForm = async () => {
     } else {
         await axios.post(`${apiBaseUrl}/api/rural-property`, dataToCreate.value, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         }).then(() => {
             serverReturn.value = true;
@@ -177,14 +181,15 @@ const submitCreationForm = async () => {
     
     await getRuralProperties();
     creationDialogIsOpen.value = false;
+    isLoading.value  = false;
 }
 
 const submitDeleteRegister = async () => {
-    const token = await loginService.getToken();
+    isLoading.value  = true;
     try{
         await axios.delete(`${apiBaseUrl}/api/rural-property/${registerToDeleteId.value}`, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         });
 
@@ -200,6 +205,7 @@ const submitDeleteRegister = async () => {
     deleteDialogIsOpen.value = false;
     registerToDeleteId.value = null;
     await getRuralProperties();
+    isLoading.value  = false;
 }
 
 const openCreationDialog = () => {
@@ -302,108 +308,115 @@ const validateForm = () => {
 </script>
 
 <template>
-
-    <Dialog closeIcon="none" :visible="deleteDialogIsOpen" modal header="Deletar Propriedade" :style="{ width: '50rem' }">
-        <p>Deseja realmente deletar o registro?</p>
-        <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancelar" severity="secondary" @click="deleteDialogIsOpen = false"></Button>
-            <Button type="button" label="Deletar" severity="danger" @click="submitDeleteRegister"></Button>
-        </div>
-    </Dialog>
-
-    <Dialog closeIcon="none" :visible="creationDialogIsOpen" modal header="Criar Propriedade" :style="{ width: '50rem' }">
-    
-        <div class="flex items-center gap-4" style="margin-bottom: 10px;">
-            <label for="name" class="font-semibold w-24">Nome</label>
-            <InputText v-model="dataToCreate.rural_property.name" id="name" class="flex-auto" placeholder="Informe o nome" autocomplete="off" />
-            
-        </div>
-        <Message v-if="formErrors.name" severity="error" >{{ formErrors.name }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="state_registration" class="font-semibold w-24">Inscrição Estadual</label>
-            <InputNumber v-model="dataToCreate.rural_property.state_registration" id="state_registration" class="flex-auto" placeholder="Informe a inscrição estadual" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.state_registration" severity="error" >{{ formErrors.state_registration }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="total_area" class="font-semibold w-24">Área Total</label>
-            <InputNumber v-model="dataToCreate.rural_property.total_area" id="total_area" class="flex-auto" placeholder="Informe a área total" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.total_area" severity="error">{{ formErrors.total_area }}</Message>
-    
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="producer_id" class="font-semibold w-24">Produtor</label>
-            <Select :options="producerSelectData" optionLabel="name" name="code" placeholder="Selecione o produtor" v-model="dataToCreate.rural_property.producer_id" id="producer_id" class="flex-auto"  autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.producer_id" severity="error">{{ formErrors.producer_id }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="address" class="font-semibold w-24">Endereço</label>
-            <InputText v-model="dataToCreate.address.address" id="address" class="flex-auto" placeholder="Informe o endereço" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.address" severity="error">{{ formErrors.address }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="number" class="font-semibold w-24">Número</label>
-            <InputText v-model="dataToCreate.address.number" id="number" class="flex-auto" placeholder="Informe o número" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.number" severity="error">{{ formErrors.number }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="city" class="font-semibold w-24">Cidade</label>
-            <InputText v-model="dataToCreate.address.city" id="city" class="flex-auto" placeholder="Informe a cidade" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.city" severity="error">{{ formErrors.city }}</Message>
-
-        <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
-            <label for="state" class="font-semibold w-24">Estado</label>
-            <InputText v-model="dataToCreate.address.state" id="state" class="flex-auto" placeholder="Informe o estado" autocomplete="off" />
-        </div>
-
-        <Message v-if="formErrors.state" severity="error" >{{ formErrors.state }}</Message>
-    
-        <div class="flex justify-end gap-2">
-            <Button type="button" label="Cancelar" severity="secondary" @click="creationDialogIsOpen = false"></Button>
-            <Button type="button" @click="submitCreationForm" label="Criar"></Button>
-        </div>
-    </Dialog>
-
-    <div class="flex justify-end pe-6 pt-6 ">
-        <Button @click="openCreationDialog" style="background-color: #111627;">Criar Propriedade Rural</Button>
+    <div class="w-full min-h-screen flex justify-center items-center" v-if="isLoading">
+        <ProgressSpinner />
     </div>
 
-    <div class="px-6 pt-6">
-        <Message  v-if="serverReturn" :life="3000" :severity="serverReturnStatus">
-            <p >{{serverReturnMessage}}</p>
-        </Message>
-    </div>
-
-    <DataTable style="border-radius: 0; padding: 25px" showGridlines :value="ruralProperties" lazy :totalRecords="totalRecords" @page="getRuralProperties" :paginator="true" :rows="perPage">
-         <template #header>
-            <div class="flex flex-wrap items-center justify-center gap-2">
-                <p class="text-xl font-bold">Propriedades Rurais</p>
+    <div v-else>
+        <Dialog closeIcon="none" :visible="deleteDialogIsOpen" modal header="Deletar Propriedade" :style="{ width: '50rem' }">
+            <p>Deseja realmente deletar o registro?</p>
+            <div class="flex justify-end gap-2">
+                <Button type="button" label="Cancelar" severity="secondary" @click="deleteDialogIsOpen = false"></Button>
+                <Button type="button" label="Deletar" severity="danger" @click="submitDeleteRegister"></Button>
             </div>
-        </template>
+        </Dialog>
 
-        <Column v-for="col in columns" :key="col.field" :field="col.field" :header="col.header" :style="{ minWidth: '12rem' }"></Column>
+        <Dialog closeIcon="none" :visible="creationDialogIsOpen" modal header="Criar Propriedade" :style="{ width: '50rem' }">
+        
+            <div class="flex items-center gap-4" style="margin-bottom: 10px;">
+                <label for="name" class="font-semibold w-24">Nome</label>
+                <InputText v-model="dataToCreate.rural_property.name" id="name" class="flex-auto" placeholder="Informe o nome" autocomplete="off" />
+                
+            </div>
+            <Message v-if="formErrors.name" severity="error" >{{ formErrors.name }}</Message>
 
-        <Column class="w-24 !text-center" header="Editar">
-            <template #body="{ data }">
-                <Button icon="pi pi-cog" @click="openUpdateRegisterModal(data)" severity="secondary" rounded></Button>
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="state_registration" class="font-semibold w-24">Inscrição Estadual</label>
+                <InputNumber v-model="dataToCreate.rural_property.state_registration" id="state_registration" class="flex-auto" placeholder="Informe a inscrição estadual" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.state_registration" severity="error" >{{ formErrors.state_registration }}</Message>
+
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="total_area" class="font-semibold w-24">Área Total</label>
+                <InputNumber v-model="dataToCreate.rural_property.total_area" id="total_area" class="flex-auto" placeholder="Informe a área total" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.total_area" severity="error">{{ formErrors.total_area }}</Message>
+        
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="producer_id" class="font-semibold w-24">Produtor</label>
+                <Select :options="producerSelectData" optionLabel="name" name="code" placeholder="Selecione o produtor" v-model="dataToCreate.rural_property.producer_id" id="producer_id" class="flex-auto"  autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.producer_id" severity="error">{{ formErrors.producer_id }}</Message>
+
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="address" class="font-semibold w-24">Endereço</label>
+                <InputText v-model="dataToCreate.address.address" id="address" class="flex-auto" placeholder="Informe o endereço" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.address" severity="error">{{ formErrors.address }}</Message>
+
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="number" class="font-semibold w-24">Número</label>
+                <InputText v-model="dataToCreate.address.number" id="number" class="flex-auto" placeholder="Informe o número" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.number" severity="error">{{ formErrors.number }}</Message>
+
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="city" class="font-semibold w-24">Cidade</label>
+                <InputText v-model="dataToCreate.address.city" id="city" class="flex-auto" placeholder="Informe a cidade" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.city" severity="error">{{ formErrors.city }}</Message>
+
+            <div class="flex items-center gap-4 pt-3" style="margin-bottom: 10px;">
+                <label for="state" class="font-semibold w-24">Estado</label>
+                <InputText v-model="dataToCreate.address.state" id="state" class="flex-auto" placeholder="Informe o estado" autocomplete="off" />
+            </div>
+
+            <Message v-if="formErrors.state" severity="error" >{{ formErrors.state }}</Message>
+        
+            <div class="flex justify-end gap-2">
+                <Button type="button" label="Cancelar" severity="secondary" @click="creationDialogIsOpen = false"></Button>
+                <Button type="button" @click="submitCreationForm" label="Criar"></Button>
+            </div>
+        </Dialog>
+
+        <div class="flex justify-end pe-6 pt-6 ">
+            <Button @click="openCreationDialog" style="background-color: #111627;">Criar Propriedade Rural</Button>
+        </div>
+
+        <div class="px-6 pt-6">
+            <Message  v-if="serverReturn" :life="3000" :severity="serverReturnStatus">
+                <p >{{serverReturnMessage}}</p>
+            </Message>
+        </div>
+
+        <DataTable style="border-radius: 0; padding: 25px" showGridlines :value="ruralProperties" lazy :totalRecords="totalRecords" @page="getRuralProperties" :paginator="true" :rows="perPage">
+            <template #header>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <p class="text-xl font-bold">Propriedades Rurais</p>
+                </div>
             </template>
-        </Column>
 
-        <Column class="w-24 !text-center" header="Deletar">
-            <template #body="{ data }">
-                <Button icon="pi pi-trash" @click="openDeleteRegisterModal(data)" severity="secondary" rounded></Button>
-            </template>
-        </Column>
-    </DataTable>
+            <Column v-for="col in columns" :key="col.field" :field="col.field" :header="col.header" :style="{ minWidth: '12rem' }"></Column>
+
+            <Column class="w-24 !text-center" header="Editar">
+                <template #body="{ data }">
+                    <Button icon="pi pi-cog" @click="openUpdateRegisterModal(data)" severity="secondary" rounded></Button>
+                </template>
+            </Column>
+
+            <Column class="w-24 !text-center" header="Deletar">
+                <template #body="{ data }">
+                    <Button icon="pi pi-trash" @click="openDeleteRegisterModal(data)" severity="secondary" rounded></Button>
+                </template>
+            </Column>
+        </DataTable>
+    </div>
+
+    
 </template>

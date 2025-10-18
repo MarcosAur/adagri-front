@@ -10,8 +10,8 @@ import { RouterLink } from 'vue-router';
         </template>
         <template #center>
           <div class="flex items-center gap-10">
-            <RouterLink class="text-white" to="propriedades">Propriedades</RouterLink>
-            <RouterLink class="text-white" to="produtores-rurais">Produtores Rurais</RouterLink>
+            <RouterLink class="text-white" to="propriedades">Produtores</RouterLink>
+            <RouterLink class="text-white" to="propriedades-rurais">Propriedades Rurais</RouterLink>
             <RouterLink class="text-white" to="unidades-produtoras">Unidades Produtoras</RouterLink>
             <RouterLink class="text-white" to="rebanhos">Rebanhos</RouterLink>
           </div>

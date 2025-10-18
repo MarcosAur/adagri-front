@@ -7,11 +7,13 @@ import { onMounted, ref } from 'vue';
 import Toolbar from 'primevue/toolbar';
 import ProgressSpinner from 'primevue/progressspinner';
 import Chart from 'primevue/chart';
+import { useAuthStore } from '@/stores/login';
 
 onMounted(async () => {
     await getReportValues();
 })
 
+const authStore = useAuthStore();
 const linkToPdfFileReport = ref('')
 const isLoading = ref(false)
 
@@ -23,10 +25,9 @@ const totalAreaPerCultureGraphicsData = ref();
 const getPdfReport = async (routeLink) => {
     isLoading.value = true; 
     try{
-        const token = await loginService.getToken();
         const response = await axios.get(`${apiBaseUrl}/api/report/${routeLink}`, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         });
       
@@ -44,10 +45,10 @@ const getPdfReport = async (routeLink) => {
 const getReportValues = async () => {
     isLoading.value = true; 
     try{
-        const token = await loginService.getToken();
+
         const response = await axios.get(`${apiBaseUrl}/api/report/overview-graphics`, {
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${authStore.token}`
             }
         });
       
@@ -55,34 +56,35 @@ const getReportValues = async () => {
         const quantityPerSpecies = response.data.quantityPerSpecies;
         const totalAreaPerCulture = response.data.totalAreaPerCulture;
 
+
         propertiesPerCitytGraphicsData.value = {
-            labels: propertiesPerCity.labels,
+            labels: propertiesPerCity ? propertiesPerCity.labels : [],
             datasets: [
                 {
                     label: 'Propriedades por municipio',
-                    data: propertiesPerCity.data,
+                    data: propertiesPerCity ? propertiesPerCity.data : [],
                     borderWidth: 1
                 }
             ]
         }
 
         totalAreaPerCultureGraphicsData.value = {
-            labels: totalAreaPerCulture.labels,
+            labels: totalAreaPerCulture ? totalAreaPerCulture.labels : [],
             datasets: [
                 {
                     label: 'Propriedades por municipio',
-                    data: totalAreaPerCulture.data,
+                    data: totalAreaPerCulture ? totalAreaPerCulture.data : [],
                     borderWidth: 1
                 }
             ]
         }
 
         quantityPerSpeciesGraphicsData.value = {
-            labels: quantityPerSpecies.labels,
+            labels: quantityPerSpecies ? quantityPerSpecies.labels : [],
             datasets: [
                 {
                     label: 'Propriedades por municipio',
-                    data: quantityPerSpecies.data,
+                    data: quantityPerSpecies ? quantityPerSpecies.data : [],
                     borderWidth: 1
                 }
             ]
@@ -98,7 +100,7 @@ const getReportValues = async () => {
 </script>
 
 <template>
-  <div class="w-full flex justify-center " v-if="isLoading">
+  <div class="w-full min-h-screen flex justify-center items-center" v-if="isLoading">
     <ProgressSpinner />
   </div>
   
@@ -112,7 +114,7 @@ const getReportValues = async () => {
 </Toolbar>
 
 
-<div class="w-full flex p-5  gap-5">
+<div class="w-full flex p-5  gap-5" v-if="!isLoading">
     <Chart type="bar" :data="propertiesPerCitytGraphicsData"  class="w-[37rem]  " />
     <Chart type="bar" :data="quantityPerSpeciesGraphicsData"  class="w-[37rem]" />
     <Chart type="bar" :data="totalAreaPerCultureGraphicsData"  class="w-[37rem] " />
