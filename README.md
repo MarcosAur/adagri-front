@@ -21,11 +21,12 @@ Este projeto é uma aplicação frontend construída com **Vue 3** e **Vite**, s
 ```bash
 docker compose up -d
 ```
-- Acessar via terminar com a URL: [Aplicação Front](http://localhost:8001)
-
-- É importante que os containers da API estejam funcionando e rodando na porta 8000 do localhost. Caso seja necessário alterar a porta do container nginx da API altere a constante **apiBaseUrl** no arquivo **settings.js**.
-
 ## Credenciais de acesso
-
+- Acessar via terminar com a URL: [Aplicação Front](http://localhost:8001)
 - email: teste@teste.com
 - senha: 12345678
+
+## Observação Importante
+- É importante que os containers da API estejam funcionando e o container do nginx esteja servindo a aplicação na porta 8000. 
+- Caso seja necessário alterar a porta do container nginx da API altere a constante **apiBaseUrl** no arquivo **settings.js**.
+
