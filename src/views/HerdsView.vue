@@ -271,7 +271,7 @@ const validateForm = () => {
 
     <div v-else>
         <div class="flex justify-end pe-6 pt-6 ">
-            <Button @click="openCreationDialog" style="background-color: #111627;">Criar Unidade de Produção</Button>
+            <Button @click="openCreationDialog" style="background-color: #111627;">Criar Rebanho</Button>
         </div>
 
         <div class="px-6 pt-6">
